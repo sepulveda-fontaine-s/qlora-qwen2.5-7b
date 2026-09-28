@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lora-qlora-finetuning"
+version = "0.1.0"
+description = "End-to-end LoRA/QLoRA fine-tuning, evaluation and deployment portfolio project."
+requires-python = ">=3.11"
+
+dependencies = [
+    "transformers==5.17.0",
+    "datasets==5.0.1",
+    "accelerate==1.15.0",
+    "peft==0.21.0",
+    "bitsandbytes==0.50.2",
+    "PyYAML>=6.0",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "langgraph",
+    "prometheus-client",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

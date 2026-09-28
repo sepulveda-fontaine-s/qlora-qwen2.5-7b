@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%environment
+    PYTHONDONTWRITEBYTECODE=1
+    PYTHONUNBUFFERED=1
+    MODEL_MODE=mock
+    MODEL_PATH=/models/Qwen2.5-7B
+    ADAPTER_PATH=/adapters/qlora_r8
+
+%files
+    pyproject.toml /app/pyproject.toml
+    src /app/src
+    app /app/app
+
+%post
+    cd /app
+
+    python -m pip install --upgrade pip setuptools wheel
+
+    python -m pip install torch \
+        --index-url https://download.pytorch.org/whl/cu128
+
+    python -m pip install .
+
+%runscript
+    cd /app
+
+    exec python -m uvicorn \
+        app.main:app \
+        --host 0.0.0.0 \
+        --port 8040

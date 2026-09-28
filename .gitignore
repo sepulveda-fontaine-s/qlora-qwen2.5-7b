@@ -1,0 +1,48 @@
+# Environment / secrets
+.env
+.venv/
+__pycache__/
+*.py[cod]
+
+# IDE
+.vscode/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Data
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Results / model artifacts
+results/*
+!results/.gitkeep
+
+# Hugging Face / model caches
+.cache/
+huggingface/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# MLflow
+mlruns/
+
+# SLURM outputs
+*.out
+*.err
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

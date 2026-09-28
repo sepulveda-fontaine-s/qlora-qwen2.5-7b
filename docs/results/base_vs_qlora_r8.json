@@ -1,0 +1,30 @@
+{
+  "base": {
+    "label": "base",
+    "model_load_seconds": 3.52881688112393,
+    "requests": 24,
+    "latency_mean_seconds": 3.7255839913074547,
+    "latency_median_seconds": 3.7244126780424267,
+    "latency_p95_seconds": 3.765624523162842,
+    "total_generated_tokens": 3072,
+    "total_generation_seconds": 89.41401579137892,
+    "aggregate_tokens_per_second": 34.35702974316242,
+    "gpu_allocated_gib": 5.187045574188232,
+    "gpu_reserved_gib": 5.50390625,
+    "gpu_peak_allocated_gib": 5.383698463439941
+  },
+  "qlora_r8": {
+    "label": "qlora_r8",
+    "model_load_seconds": 3.390812397003174,
+    "requests": 24,
+    "latency_mean_seconds": 6.140224889890912,
+    "latency_median_seconds": 6.132363666081801,
+    "latency_p95_seconds": 6.205124136060476,
+    "total_generated_tokens": 3072,
+    "total_generation_seconds": 147.36539735738188,
+    "aggregate_tokens_per_second": 20.84614200543949,
+    "gpu_allocated_gib": 5.203189373016357,
+    "gpu_reserved_gib": 5.548828125,
+    "gpu_peak_allocated_gib": 5.399334907531738
+  }
+}

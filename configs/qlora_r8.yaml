@@ -1,0 +1,43 @@
+model:
+  path: data/raw/models/Qwen2.5-7B
+  max_length: 1024
+
+dataset:
+  path: data/processed/dolly_15k_tokenized
+  train_split: train
+  validation_split: validation
+
+quantization:
+  load_in_4bit: true
+  quant_type: nf4
+  compute_dtype: bfloat16
+  double_quant: true
+
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  bias: none
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+
+training:
+  seed: 42
+  epochs: 1
+  per_device_batch_size: 4
+  gradient_accumulation_steps: 4
+  effective_batch_size: 16
+  learning_rate: 0.0002
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  gradient_checkpointing: true
+  bf16: true
+  warmup_ratio: 0.03
+  logging_steps: 10
+  checkpoint_steps: 200
+
+output:
+  dir: results/qlora_r8

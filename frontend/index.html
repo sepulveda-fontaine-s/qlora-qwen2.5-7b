@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QLoRA Instruction Demo</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .header {
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+        }
+
+        .status-card,
+        .panel {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .status-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            color: #4b5563;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font: inherit;
+            margin-bottom: 20px;
+        }
+
+        #context {
+            min-height: 100px;
+        }
+
+        button {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 7px;
+            background: #111827;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .response {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            min-height: 80px;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 30px;
+            margin-top: 18px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+
+        .error {
+            color: #b91c1c;
+        }
+
+        .online {
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .offline {
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>QLoRA Instruction-Tuned LLM</h1>
+        <div class="subtitle">
+            Qwen2.5-7B adapted with QLoRA and served through FastAPI + LangGraph
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-grid">
+
+            <div class="status-item">
+                <strong>API status</strong>
+                <span id="apiStatus" class="status-value">Checking...</span>
+            </div>
+
+            <div class="status-item">
+                <strong>Model</strong>
+                <span id="modelName" class="status-value">Loading...</span>
+            </div>
+
+            <div class="status-item">
+                <strong>Runtime mode</strong>
+                <span id="modelMode" class="status-value">Loading...</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="panel">
+
+        <label for="instruction">Instruction</label>
+
+        <textarea
+            id="instruction"
+            placeholder="Enter an instruction..."
+        >Explain the difference between overfitting and underfitting in machine learning.</textarea>
+
+        <label for="context">Optional context</label>
+
+        <textarea
+            id="context"
+            placeholder="Add context if the task requires it..."
+        ></textarea>
+
+        <button id="generateButton" onclick="generateResponse()">
+            Generate
+        </button>
+
+    </div>
+
+    <div class="panel">
+
+        <h2>Model response</h2>
+
+        <div id="response" class="response">
+            Submit an instruction to generate a response.
+        </div>
+
+        <div class="metrics">
+            <div>
+                <strong>Latency:</strong>
+                <span id="latency">—</span>
+            </div>
+
+            <div>
+                <strong>Generated tokens:</strong>
+                <span id="tokens">—</span>
+            </div>
+
+            <div>
+                <strong>Model mode:</strong>
+                <span id="responseMode">—</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8040";
+
+
+    async function loadStatus() {
+        const apiStatus = document.getElementById("apiStatus");
+
+        try {
+            const readyResponse = await fetch(`${API_URL}/ready`);
+
+            if (!readyResponse.ok) {
+                throw new Error("API not ready");
+            }
+
+            const ready = await readyResponse.json();
+
+            apiStatus.textContent = "Online";
+            apiStatus.className = "online";
+
+            document.getElementById("modelMode").textContent =
+                ready.model_mode;
+
+            const modelResponse = await fetch(`${API_URL}/model-info`);
+            const model = await modelResponse.json();
+
+            document.getElementById("modelName").textContent =
+                `${model.model_name} + ${model.adapter}`;
+
+        } catch (error) {
+            apiStatus.textContent = "Offline";
+            apiStatus.className = "offline";
+
+            document.getElementById("modelName").textContent = "Unavailable";
+            document.getElementById("modelMode").textContent = "Unavailable";
+        }
+    }
+
+
+    async function generateResponse() {
+        const button = document.getElementById("generateButton");
+        const responseBox = document.getElementById("response");
+
+        const instruction =
+            document.getElementById("instruction").value.trim();
+
+        const context =
+            document.getElementById("context").value.trim();
+
+        if (!instruction) {
+            responseBox.innerHTML =
+                '<span class="error">Instruction cannot be empty.</span>';
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Generating...";
+
+        responseBox.textContent = "Generating response...";
+
+        document.getElementById("latency").textContent = "—";
+        document.getElementById("tokens").textContent = "—";
+        document.getElementById("responseMode").textContent = "—";
+
+        try {
+            const response = await fetch(`${API_URL}/generate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    instruction: instruction,
+                    context: context
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || JSON.stringify(data)
+                );
+            }
+
+            responseBox.textContent = data.text;
+
+            document.getElementById("latency").textContent =
+                `${data.latency_seconds.toFixed(3)} s`;
+
+            document.getElementById("tokens").textContent =
+                data.generated_tokens;
+
+            document.getElementById("responseMode").textContent =
+                data.model_mode;
+
+        } catch (error) {
+            responseBox.innerHTML =
+                `<span class="error">${error.message}</span>`;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Generate";
+        }
+    }
+
+
+    loadStatus();
+</script>
+
+</body>
+</html>
